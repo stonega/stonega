@@ -7,6 +7,9 @@ const GITHUB_TOKEN = Bun.env.GITHUB_TOKEN;
 const GITHUB_USERNAME = Bun.env.GITHUB_USERNAME || "stonega"; // Replace with your username
 const OPENAI_ENDPOINT = "https://models.github.ai/inference";
 
+// Add timezone handling
+const SHANGHAI_TIMEZONE = 'Asia/Shanghai';
+
 interface PromptConfig {
   name: string;
   description: string;
@@ -34,6 +37,17 @@ interface ActivityStats {
   issueCount: number;
 }
 
+function isWithinPastDay(eventDate: string): boolean {
+  const now = new Date();
+  const shanghaiNow = new Date(now.toLocaleString("en-US", { timeZone: SHANGHAI_TIMEZONE }));
+  const oneDayAgo = new Date(shanghaiNow.getTime() - 24 * 60 * 60 * 1000);
+  
+  const eventDateTime = new Date(eventDate);
+  const eventShanghaiTime = new Date(eventDateTime.toLocaleString("en-US", { timeZone: SHANGHAI_TIMEZONE }));
+  
+  return eventShanghaiTime >= oneDayAgo;
+}
+
 function loadPromptConfig(): PromptConfig {
   try {
     const configFile = readFileSync(".prompt.yaml", "utf-8");
@@ -57,19 +71,24 @@ async function fetchRecentActivity(): Promise<GitHubEvent[]> {
 
     const { data: events } = await octokit.rest.activity.listPublicEventsForUser({
       username: GITHUB_USERNAME,
-      per_page: 50, // Get more events to account for filtering
+      per_page: 100, // Get more events to account for filtering by time
     });
 
-    // Filter out organization repositories - only keep personal repos
-    const personalEvents = events.filter((event: any) => {
+    // Filter out organization repositories and only keep events from past 24 hours
+    const recentPersonalEvents = events.filter((event: any) => {
       // Check if the repo belongs to the user (not an organization)
       const repoOwner = event.repo.name.split('/')[0];
-      return repoOwner === userInfo.login;
+      const isPersonalRepo = repoOwner === userInfo.login;
+      
+      // Check if event is within past 24 hours (Shanghai timezone)
+      const isRecent = isWithinPastDay(event.created_at);
+      
+      return isPersonalRepo && isRecent;
     });
 
-    console.log(`📊 Filtered ${events.length} total events to ${personalEvents.length} personal repo events`);
+    console.log(`📊 Filtered ${events.length} total events to ${recentPersonalEvents.length} personal repo events from past 24 hours (Shanghai time)`);
     
-    return personalEvents as GitHubEvent[];
+    return recentPersonalEvents as GitHubEvent[];
   } catch (error) {
     console.error("Error fetching GitHub activity:", error);
     throw error;
@@ -122,42 +141,62 @@ function generateBadges(stats: ActivityStats): string {
 }
 
 function formatActivityForAI(events: GitHubEvent[]): string {
-  const recentEvents = events.slice(0, 20); // Focus on most recent 20 events
+  const now = new Date();
+  const shanghaiTime = now.toLocaleString("en-US", { 
+    timeZone: SHANGHAI_TIMEZONE,
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
   
-  let formattedActivity = "Recent GitHub Activity:\n\n";
+  let formattedActivity = `GitHub Activity from the Past 24 Hours (as of ${shanghaiTime} Shanghai time):\n\n`;
   
-  for (const event of recentEvents) {
-    const date = new Date(event.created_at).toLocaleDateString();
+  if (events.length === 0) {
+    formattedActivity += "No recent activity in personal repositories during the past 24 hours.\n";
+    return formattedActivity;
+  }
+  
+  for (const event of events) {
+    const eventDate = new Date(event.created_at);
+    const shanghaiEventTime = eventDate.toLocaleString("en-US", { 
+      timeZone: SHANGHAI_TIMEZONE,
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
     const repo = event.repo.name;
     
     switch (event.type) {
       case "PushEvent":
         const commits = event.payload.commits?.length || 0;
-        formattedActivity += `- ${date}: Pushed ${commits} commit(s) to ${repo}\n`;
+        formattedActivity += `- ${shanghaiEventTime}: Pushed ${commits} commit(s) to ${repo}\n`;
         break;
       case "CreateEvent":
         const refType = event.payload.ref_type;
-        formattedActivity += `- ${date}: Created ${refType} in ${repo}\n`;
+        formattedActivity += `- ${shanghaiEventTime}: Created ${refType} in ${repo}\n`;
         break;
       case "IssuesEvent":
         const action = event.payload.action;
-        formattedActivity += `- ${date}: ${action} issue in ${repo}\n`;
+        formattedActivity += `- ${shanghaiEventTime}: ${action} issue in ${repo}\n`;
         break;
       case "PullRequestEvent":
         const prAction = event.payload.action;
-        formattedActivity += `- ${date}: ${prAction} pull request in ${repo}\n`;
+        formattedActivity += `- ${shanghaiEventTime}: ${prAction} pull request in ${repo}\n`;
         break;
       case "WatchEvent":
-        formattedActivity += `- ${date}: Starred ${repo}\n`;
+        formattedActivity += `- ${shanghaiEventTime}: Starred ${repo}\n`;
         break;
       case "ForkEvent":
-        formattedActivity += `- ${date}: Forked ${repo}\n`;
+        formattedActivity += `- ${shanghaiEventTime}: Forked ${repo}\n`;
         break;
       case "ReleaseEvent":
-        formattedActivity += `- ${date}: Released in ${repo}\n`;
+        formattedActivity += `- ${shanghaiEventTime}: Released in ${repo}\n`;
         break;
       default:
-        formattedActivity += `- ${date}: ${event.type} in ${repo}\n`;
+        formattedActivity += `- ${shanghaiEventTime}: ${event.type} in ${repo}\n`;
     }
   }
   
@@ -210,6 +249,15 @@ function updateReadme(summary: string, badges: string): void {
     const beforeMarker = readmeContent.substring(0, startIndex + startMarker.length);
     const afterMarker = readmeContent.substring(endIndex);
     
+    const shanghaiTime = new Date().toLocaleString("en-US", { 
+      timeZone: SHANGHAI_TIMEZONE,
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    
     const updatedContent = `${beforeMarker}
 
 ## Recent Activity Stats
@@ -218,7 +266,7 @@ ${badges}
 
 ${summary}
 
-*Last updated: ${new Date().toLocaleDateString()} auto generated by [GitHub Models](https://github.com/${GITHUB_USERNAME}/${GITHUB_USERNAME})*
+*Last updated: ${shanghaiTime} (Shanghai time) *
 
 ${afterMarker}`;
     
