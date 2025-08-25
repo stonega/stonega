@@ -4,14 +4,13 @@
 
 <!-- GITHUB_ACTIVITY_START -->
 
-## 📊 Recent Activity Stats
+## Recent Activity Stats
 
-![Recent Commits](https://img.shields.io/badge/Recent%20Commits-8-blue?style=flat-square&logo=git&logoColor=white) ![Active Repos](https://img.shields.io/badge/Active%20Repos-4-green?style=flat-square&logo=github&logoColor=white) ![Pull Requests](https://img.shields.io/badge/Pull%20Requests-0-orange?style=flat-square&logo=githubactions&logoColor=white) ![Issues Opened](https://img.shields.io/badge/Issues%20Opened-0-red?style=flat-square&logo=githubactions&logoColor=white)
+![Recent Commits](https://img.shields.io/badge/Recent%20Commits-11-blue?style=flat-square&logo=git&logoColor=white) ![Active Repos](https://img.shields.io/badge/Active%20Repos-4-green?style=flat-square&logo=github&logoColor=white) ![Pull Requests](https://img.shields.io/badge/Pull%20Requests-0-orange?style=flat-square&logo=githubactions&logoColor=white) ![Issues Opened](https://img.shields.io/badge/Issues%20Opened-0-red?style=flat-square&logo=githubactions&logoColor=white)
 
-**Recent Activity Summary:**
-Lately, I’ve been deepening my work on several projects, with a special focus on improving authentication flows in my new **expo-google-signin** repo. I’ve also made significant contributions to **open-lovable** and **getclay**, where I’m experimenting with new branches and closing out feature pull requests. It’s been rewarding to iterate quickly, explore fresh ideas, and collaborate across these projects as I expand my toolkit with modern React and Expo integrations.
+I've been diving deep into my stonega projects lately, focusing on refining features and streamlining workflows. Recently, I wrapped up a major update for open-lovable and explored new authentication patterns with expo-google-signin. It's been exciting to experiment with different branches and collaborate across repositories, and I'm learning a ton by iterating quickly and integrating community feedback.
 
-*Last updated: 8/25/2025*
+*Last updated: 8/25/2025 *
 
 <!-- GITHUB_ACTIVITY_END -->
 
