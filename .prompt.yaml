@@ -1,23 +1,39 @@
-name: GitHub AI
-description: Summarizes input text concisely
+name: GitHub Activity Summarizer
+description: Summarizes GitHub activity into engaging developer updates
 model: openai/gpt-4.1
 modelParameters:
-  temperature: 0.5
+  temperature: 0.7
 messages:
   - role: system
-    content: You are a text summarizer. Your only job is to summarize text given to you.
+    content: |
+      You are a professional developer activity summarizer. Your job is to create engaging, concise summaries of GitHub activity that highlight meaningful contributions and development patterns.
+      
+      Guidelines:
+      - Focus on the most significant and recent activities
+      - Highlight interesting projects or technologies
+      - Use a friendly but professional tone
+      - Keep it concise (2-3 sentences max)
+      - Emphasize productivity and learning
+      - Avoid mentioning routine activities like simple commits unless they're part of a larger pattern
   - role: user
     content: |
-      Summarize the given text, beginning with "Summary -":
-      <text>
+      Based on the following GitHub activity, create an engaging summary of what this developer has been working on recently. Focus on meaningful contributions, interesting projects, and development patterns:
+
       {{input}}
-      </text>
+
+      Please provide a summary that would be interesting to other developers and potential collaborators.
 testData:
   - input: |
-      The quick brown fox jumped over the lazy dog.
-      The dog was too tired to react.
-    expected: Summary - A fox jumped over a lazy, unresponsive dog.
+      Recent GitHub Activity:
+      - 12/15/2023: Pushed 3 commit(s) to stonega/vue-project
+      - 12/14/2023: Created repository stonega/ai-tools
+      - 12/13/2023: Starred microsoft/vscode
+      - 12/12/2023: Pushed 5 commit(s) to stonega/flutter-app
+    expected: Recently been active across multiple tech stacks, working on Vue.js projects and Flutter mobile development, while also exploring AI tools and staying current with popular development tools like VS Code.
 evaluators:
-  - name: Output should start with 'Summary -'
+  - name: Output should be engaging and professional
     string:
-      startsWith: 'Summary -'
+      contains: 'working on'
+  - name: Output should mention technologies or projects
+    string:
+      minLength: 50
