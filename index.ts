@@ -212,14 +212,13 @@ function updateReadme(summary: string, badges: string): void {
     
     const updatedContent = `${beforeMarker}
 
-## 📊 Recent Activity Stats
+## Recent Activity Stats
 
 ${badges}
 
-**Recent Activity Summary:**
 ${summary}
 
-*Last updated: ${new Date().toLocaleDateString()}*
+*Last updated: ${new Date().toLocaleDateString()} *
 
 ${afterMarker}`;
     
