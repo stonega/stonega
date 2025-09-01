@@ -37,15 +37,15 @@ interface ActivityStats {
   issueCount: number;
 }
 
-function isWithinPastDay(eventDate: string): boolean {
+function isWithinPastWeek(eventDate: string): boolean {
   const now = new Date();
   const shanghaiNow = new Date(now.toLocaleString("en-US", { timeZone: TIMEZONE }));
-  const oneDayAgo = new Date(shanghaiNow.getTime() - 24 * 60 * 60 * 1000);
-  
+  const oneWeekAgo = new Date(shanghaiNow.getTime() - 7 * 24 * 60 * 60 * 1000);
+
   const eventDateTime = new Date(eventDate);
   const eventShanghaiTime = new Date(eventDateTime.toLocaleString("en-US", { timeZone: TIMEZONE }));
-  
-  return eventShanghaiTime >= oneDayAgo;
+
+  return eventShanghaiTime >= oneWeekAgo;
 }
 
 function loadPromptConfig(): PromptConfig {
@@ -74,20 +74,20 @@ async function fetchRecentActivity(): Promise<GitHubEvent[]> {
       per_page: 100, // Get more events to account for filtering by time
     });
 
-    // Filter out organization repositories and only keep events from past 24 hours
+    // Filter out organization repositories and only keep events from past week
     const recentPersonalEvents = events.filter((event: any) => {
       // Check if the repo belongs to the user (not an organization)
       const repoOwner = event.repo.name.split('/')[0];
       const isPersonalRepo = repoOwner === userInfo.login;
-      
-      // Check if event is within past 24 hours (Shanghai timezone)
-      const isRecent = isWithinPastDay(event.created_at);
-      
+
+      // Check if event is within past week (Shanghai timezone)
+      const isRecent = isWithinPastWeek(event.created_at);
+
       return isPersonalRepo && isRecent;
     });
 
-    console.log(`📊 Filtered ${events.length} total events to ${recentPersonalEvents.length} personal repo events from past 24 hours (Shanghai time)`);
-    
+    console.log(`📊 Filtered ${events.length} total events to ${recentPersonalEvents.length} personal repo events from past week (Shanghai time)`);
+
     return recentPersonalEvents as GitHubEvent[];
   } catch (error) {
     console.error("Error fetching GitHub activity:", error);
@@ -142,7 +142,7 @@ function generateBadges(stats: ActivityStats): string {
 
 function formatActivityForAI(events: GitHubEvent[]): string {
   const now = new Date();
-  const shanghaiTime = now.toLocaleString("en-US", { 
+  const shanghaiTime = now.toLocaleString("en-US", {
     timeZone: TIMEZONE,
     year: 'numeric',
     month: 'long',
@@ -150,17 +150,17 @@ function formatActivityForAI(events: GitHubEvent[]): string {
     hour: '2-digit',
     minute: '2-digit'
   });
-  
-  let formattedActivity = `GitHub Activity from the Past 24 Hours (as of ${shanghaiTime} Shanghai time):\n\n`;
-  
+
+  let formattedActivity = `GitHub Activity from the Past Week (as of ${shanghaiTime} Shanghai time):\n\n`;
+
   if (events.length === 0) {
-    formattedActivity += "No recent activity in personal repositories during the past 24 hours.\n";
+    formattedActivity += "No recent activity in personal repositories during the past week.\n";
     return formattedActivity;
   }
-  
+
   for (const event of events) {
     const eventDate = new Date(event.created_at);
-    const shanghaiEventTime = eventDate.toLocaleString("en-US", { 
+    const shanghaiEventTime = eventDate.toLocaleString("en-US", {
       timeZone: TIMEZONE,
       month: 'short',
       day: 'numeric',
@@ -168,7 +168,7 @@ function formatActivityForAI(events: GitHubEvent[]): string {
       minute: '2-digit'
     });
     const repo = event.repo.name;
-    
+
     switch (event.type) {
       case "PushEvent":
         const commits = event.payload.commits?.length || 0;
@@ -199,14 +199,14 @@ function formatActivityForAI(events: GitHubEvent[]): string {
         formattedActivity += `- ${shanghaiEventTime}: ${event.type} in ${repo}\n`;
     }
   }
-  
+
   return formattedActivity;
 }
 
 async function generateSummary(activity: string, config: PromptConfig): Promise<string> {
-  const client = new OpenAI({ 
-    baseURL: OPENAI_ENDPOINT, 
-    apiKey: GITHUB_TOKEN 
+  const client = new OpenAI({
+    baseURL: OPENAI_ENDPOINT,
+    apiKey: GITHUB_TOKEN
   });
 
   // Build messages from config, replacing {{input}} placeholder
@@ -235,21 +235,21 @@ function updateReadme(summary: string, badges: string): void {
   try {
     const readmePath = "README.md";
     let readmeContent = readFileSync(readmePath, "utf-8");
-    
+
     const startMarker = "<!-- GITHUB_ACTIVITY_START -->";
     const endMarker = "<!-- GITHUB_ACTIVITY_END -->";
-    
+
     const startIndex = readmeContent.indexOf(startMarker);
     const endIndex = readmeContent.indexOf(endMarker);
-    
+
     if (startIndex === -1 || endIndex === -1) {
       throw new Error("README.md markers not found. Please add <!-- GITHUB_ACTIVITY_START --> and <!-- GITHUB_ACTIVITY_END --> markers.");
     }
-    
+
     const beforeMarker = readmeContent.substring(0, startIndex + startMarker.length);
     const afterMarker = readmeContent.substring(endIndex);
-    
-    const shanghaiTime = new Date().toLocaleString("en-US", { 
+
+    const shanghaiTime = new Date().toLocaleString("en-US", {
       timeZone: TIMEZONE,
       year: 'numeric',
       month: 'long',
@@ -257,7 +257,7 @@ function updateReadme(summary: string, badges: string): void {
       hour: '2-digit',
       minute: '2-digit'
     });
-    
+
     const updatedContent = `${beforeMarker}
 
 ## Recent Activity Stats
@@ -269,7 +269,7 @@ ${summary}
 *Last updated: ${shanghaiTime} auto generated by [GitHub Models](https://github.com/${GITHUB_USERNAME}/${GITHUB_USERNAME})*
 
 ${afterMarker}`;
-    
+
     writeFileSync(readmePath, updatedContent, "utf-8");
     console.log("✅ README.md updated successfully!");
   } catch (error) {
@@ -281,46 +281,46 @@ ${afterMarker}`;
 export async function main() {
   try {
     console.log("🚀 Starting GitHub activity summary generation...");
-    
+
     // Load prompt configuration
     console.log("📋 Loading prompt configuration...");
     const config = loadPromptConfig();
     console.log(`✅ Loaded config: ${config.name} - ${config.description}`);
     console.log(`📊 Using model: ${config.model} with temperature: ${config.modelParameters.temperature}`);
-    
+
     // Fetch recent GitHub activity
     console.log("📡 Fetching recent GitHub activity...");
     const events = await fetchRecentActivity();
     console.log(`✅ Found ${events.length} recent events`);
-    
+
     // Calculate activity statistics
     console.log("🔢 Calculating activity statistics...");
     const stats = calculateActivityStats(events);
     console.log(`📈 Stats: ${stats.commitCount} commits, ${stats.repoCount} repos, ${stats.prCount} PRs, ${stats.issueCount} issues`);
-    
+
     // Generate badges
     const badges = generateBadges(stats);
     console.log("🏷️ Generated activity badges");
-    
+
     // Format activity for AI processing
     const formattedActivity = formatActivityForAI(events);
     console.log("📝 Formatted activity data for AI");
-    
+
     // Generate AI summary using config
     console.log("🤖 Generating AI summary using .prompt.yaml config...");
     const summary = await generateSummary(formattedActivity, config);
     console.log("✅ AI summary generated");
-    
+
     // Update README with summary and badges
     console.log("📄 Updating README.md...");
     updateReadme(summary, badges);
-    
+
     console.log("🎉 Process completed successfully!");
     console.log("\nGenerated Badges:");
     console.log(badges);
     console.log("\nGenerated Summary:");
     console.log(summary);
-    
+
   } catch (error) {
     console.error("❌ Error in main process:", error);
     process.exit(1);
