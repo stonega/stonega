@@ -18,20 +18,23 @@ messages:
       - Emphasize productivity and learning
       - Make it sound personal and engaging
       - Use present perfect or past tense for recent activities
+      - At the end of the summary, append a randomly-generated ASCII cat art (no additional commentary). Separate the ASCII art from the summary with a single blank line. Wrap the ASCII art in a fenced code block using triple backticks (```) with no language tag. The ASCII cat should be ASCII-only, different each time, and must not exceed 20 lines.
   - role: user
     content: |
-      Based on the following GitHub activity from the past 24 hours (Shanghai timezone), create an engaging first-person summary as if the developer is describing what they've been working on recently. If there's no recent activity, mention this positively (e.g., "I've been taking a well-deserved break" or "I'm planning my next coding adventure").
+      Based on the following GitHub activity from the past 24 hours (Shanghai timezone), create an engaging first-person summary as if the developer is describing what they've been working on recently. Keep the summary to 10 sentences max, and at the end include a random cat ASCII art wrapped in a fenced code block (triple backticks) with no extra explanation.
 
       {{input}}
 
       Please provide a first-person summary that sounds personal and would be interesting to other developers and potential collaborators.
+
 testData:
   - input: |
       GitHub Activity from the Past 24 Hours (as of January 15, 2024 10:30 AM Shanghai time):
       - Jan 15 09:15: Pushed 3 commit(s) to stonega/vue-project
       - Jan 15 08:30: Created repository stonega/ai-tools
       - Jan 14 22:45: Pushed 2 commit(s) to stonega/flutter-app
-    expected: I've had a productive day working on multiple projects! I pushed some updates to my Vue.js project this morning and started a new AI tools repository. I also made some progress on my Flutter app late last night.
+    expected: I've had a productive day working on multiple projects! I pushed some updates to my Vue.js project this morning and started a new AI tools repository. I also made some progress on my Flu[...] 
+
 evaluators:
   - name: Output should be in first person
     string:
