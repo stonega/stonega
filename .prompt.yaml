@@ -18,10 +18,10 @@ messages:
       - Emphasize productivity and learning
       - Make it sound personal and engaging
       - Use present perfect or past tense for recent activities
-      - At the end of the summary, append a randomly-generated ASCII cat art (no additional commentary). Separate the ASCII art from the summary with a single blank line. Wrap the ASCII art in a fenced code block using triple backticks (```) with no language tag. The ASCII cat should be ASCII-only, different each time, and must not exceed 20 lines.
+      - At the end of the summary, append a randomly-generated ASCII cat art (no additional commentary). Separate the ASCII art from the summary with a single blank line. Wrap the ASCII art in a fenced code block using triple backticks (```) with no language tag. The ASCII cat should be ASCII-only, different each time, and must not exceed 20 lines. The cat must be detailed, complex, and lively (e.g., active poses, expressive faces, or interacting with objects). Use various ASCII characters to create texture and depth.
   - role: user
     content: |
-      Based on the following GitHub activity from the past 24 hours (Shanghai timezone), create an engaging first-person summary as if the developer is describing what they've been working on recently. Keep the summary to 10 sentences max, and at the end include a random cat ASCII art wrapped in a fenced code block (triple backticks) with no extra explanation.
+      Based on the following GitHub activity from the past 24 hours (Shanghai timezone), create an engaging first-person summary as if the developer is describing what they've been working on recently. Keep the summary to 10 sentences max, and at the end include a detailed and complex random cat ASCII art wrapped in a fenced code block (triple backticks) with no extra explanation.
 
       {{input}}
 
