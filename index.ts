@@ -3,7 +3,7 @@ import { Octokit } from "@octokit/rest";
 import { readFileSync, writeFileSync } from "fs";
 import * as yaml from "js-yaml";
 
-const GITHUB_TOKEN = Bun.env.GITHUB_TOKEN;
+const GITHUB_TOKEN = Bun.env.GITHUB_ACTIVITY_TOKEN || Bun.env.GITHUB_TOKEN;
 const GITHUB_USERNAME = Bun.env.GITHUB_USERNAME || "stonega"; // Replace with your username
 const OPENAI_ENDPOINT = "https://models.github.ai/inference";
 
@@ -64,21 +64,43 @@ async function fetchRecentActivity(): Promise<GitHubEvent[]> {
   });
 
   try {
-    // First, get user info to identify personal repositories
-    const { data: userInfo } = await octokit.rest.users.getByUsername({
-      username: GITHUB_USERNAME,
-    });
+    let userLogin = GITHUB_USERNAME;
+    let events: GitHubEvent[] = [];
 
-    const { data: events } = await octokit.rest.activity.listPublicEventsForUser({
-      username: GITHUB_USERNAME,
-      per_page: 100, // Get more events to account for filtering by time
-    });
+    if (GITHUB_TOKEN) {
+      const { data: authenticatedUser } = await octokit.rest.users.getAuthenticated();
+      userLogin = authenticatedUser.login;
+
+      if (userLogin.toLowerCase() === GITHUB_USERNAME.toLowerCase()) {
+        const { data } = await octokit.rest.activity.listEventsForAuthenticatedUser({
+          username: userLogin,
+          per_page: 100, // Get more events to account for filtering by time
+        });
+
+        events = data as GitHubEvent[];
+        console.log(`🔐 Using authenticated events for ${userLogin}, including private activity`);
+      } else {
+        console.warn(
+          `⚠️ Authenticated as ${userLogin}, but GITHUB_USERNAME is ${GITHUB_USERNAME}. Falling back to public events for the configured user.`
+        );
+      }
+    }
+
+    if (events.length === 0) {
+      const { data } = await octokit.rest.activity.listPublicEventsForUser({
+        username: GITHUB_USERNAME,
+        per_page: 100, // Get more events to account for filtering by time
+      });
+
+      events = data as GitHubEvent[];
+      console.log(`🌐 Using public events for ${GITHUB_USERNAME}`);
+    }
 
     // Filter out organization repositories and only keep events from past week
     const recentPersonalEvents = events.filter((event: any) => {
       // Check if the repo belongs to the user (not an organization)
       const repoOwner = event.repo.name.split('/')[0];
-      const isPersonalRepo = repoOwner === userInfo.login;
+      const isPersonalRepo = repoOwner.toLowerCase() === userLogin.toLowerCase();
 
       // Check if event is within past week (Shanghai timezone)
       const isRecent = isWithinPastWeek(event.created_at);
