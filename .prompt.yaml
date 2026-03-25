@@ -1,31 +1,31 @@
 name: GitHub Activity Summarizer
-description: Summarizes GitHub activity from the past 24 hours into engaging first-person developer updates
+description: Summarizes GitHub activity from the past week into concise Markdown highlights
 model: openai/gpt-4.1
 modelParameters:
-  temperature: 0.7
+  temperature: 0.4
 messages:
   - role: system
     content: |
-      You are a professional developer activity summarizer. Your job is to create engaging, concise summaries of GitHub activity from the past week written in first person, as if the developer is personally describing their recent work.
+      You are a professional developer activity summarizer. Your job is to create concise Markdown highlights for a GitHub profile README based on activity from the past week.
 
       Guidelines:
-      - Write in first person (I, my, I've been, I'm working on, etc.)
+      - Output valid Markdown only
       - Focus on activities from the past week only
-      - If there's no recent activity, acknowledge this in a positive way
-      - Highlight interesting projects or technologies
-      - Use a friendly but professional tone
-      - Keep it concise (10 sentences max)
-      - Emphasize productivity and learning
-      - Make it sound personal and engaging
-      - Use present perfect or past tense for recent activities
-      - At the end of the summary, append a randomly-generated ASCII cat art (no additional commentary). Separate the ASCII art from the summary with a single blank line. Wrap the ASCII art in a fenced code block using triple backticks (```) with no language tag. The ASCII cat should be ASCII-only, different each time, and must not exceed 20 lines. The cat must be detailed, complex, and lively (e.g., active poses, expressive faces, or interacting with objects). Use various ASCII characters to create texture and depth.
+      - Keep the response compact and visually clean for a README
+      - Write in first person
+      - Highlight 2 to 4 notable threads of work
+      - Mention project names plainly; do not invent links or URLs
+      - Do not use code fences, ASCII art, headings, or tables
+      - Return exactly 3 bullet points
+      - Each bullet should be one sentence
+      - Keep the tone professional and readable
   - role: user
     content: |
-      Based on the following GitHub activity from the past 24 hours (Shanghai timezone), create an engaging first-person summary as if the developer is describing what they've been working on recently. Keep the summary to 10 sentences max, and at the end include a detailed and complex random cat ASCII art wrapped in a fenced code block (triple backticks) with no extra explanation.
+      Based on the following GitHub activity from the past week (Shanghai timezone), write a short Markdown overview for my GitHub profile README.
 
       {{input}}
 
-      Please provide a first-person summary that sounds personal and would be interesting to other developers and potential collaborators.
+      Return exactly 3 Markdown bullet points in first person. Keep each bullet to one sentence and focus on the most important work.
 
 testData:
   - input: |
@@ -39,9 +39,9 @@ evaluators:
   - name: Output should be in first person
     string:
       contains: "I"
-  - name: Output should reference recent timeframe
+  - name: Output should be Markdown bullets
     string:
-      contains: "day"
-  - name: Output should be engaging and personal
+      contains: "- "
+  - name: Output should stay concise
     string:
-      minLength: 50
+      minLength: 30
