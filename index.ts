@@ -37,6 +37,14 @@ interface ActivityStats {
   issueCount: number;
 }
 
+function getPushCommitCount(event: GitHubEvent): number {
+  if (event.type !== "PushEvent") {
+    return 0;
+  }
+
+  return event.payload.distinct_size ?? event.payload.size ?? event.payload.commits?.length ?? 0;
+}
+
 function isWithinPastWeek(eventDate: string): boolean {
   const now = new Date();
   const shanghaiNow = new Date(now.toLocaleString("en-US", { timeZone: TIMEZONE }));
@@ -132,7 +140,7 @@ function calculateActivityStats(events: GitHubEvent[]): ActivityStats {
 
     switch (event.type) {
       case "PushEvent":
-        stats.commitCount += event.payload.commits?.length || 0;
+        stats.commitCount += getPushCommitCount(event);
         break;
       case "PullRequestEvent":
         if (event.payload.action === 'opened') {
@@ -193,7 +201,7 @@ function formatActivityForAI(events: GitHubEvent[]): string {
 
     switch (event.type) {
       case "PushEvent":
-        const commits = event.payload.commits?.length || 0;
+        const commits = getPushCommitCount(event);
         formattedActivity += `- ${shanghaiEventTime}: Pushed ${commits} commit(s) to ${repo}\n`;
         break;
       case "CreateEvent":
