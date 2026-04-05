@@ -4,10 +4,6 @@
 
 <!-- GITHUB_ACTIVITY_START -->
 
-## Recent Activity Stats
-
-![Recent Commits](https://img.shields.io/badge/Recent%20Commits-0-blue?style=flat&logoColor=white) ![Active Repos](https://img.shields.io/badge/Active%20Repos-6-green?style=flat&logoColor=white) ![Pull Requests](https://img.shields.io/badge/Pull%20Requests-1-orange?style=flat&logoColor=white)
-
 ## Weekly Overview
 
 - I made significant progress on ibus-voice, including opening and merging a pull request and creating a new branch for feature development.

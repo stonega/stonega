@@ -171,15 +171,6 @@ function calculateActivityStats(events: GitHubEvent[]): ActivityStats {
   return stats;
 }
 
-function generateBadges(stats: ActivityStats): string {
-  const badges = [
-    `![Recent Commits](https://img.shields.io/badge/Recent%20Commits-${stats.commitCount}-blue?style=flat&logoColor=white)`,
-    `![Active Repos](https://img.shields.io/badge/Active%20Repos-${stats.repoCount}-green?style=flat&logoColor=white)`,
-    `![Pull Requests](https://img.shields.io/badge/Pull%20Requests-${stats.prCount}-orange?style=flat&logoColor=white)`,
-  ];
-
-  return badges.join(' ');
-}
 
 function summarizeRepoActivity(events: GitHubEvent[]): RepoActivitySummary[] {
   const repoMap = new Map<string, RepoActivitySummary>();
@@ -346,7 +337,7 @@ async function generateSummary(activity: string, config: PromptConfig): Promise<
   }
 }
 
-function updateReadme(summary: string, badges: string, repoTable: string): void {
+function updateReadme(summary: string, repoTable: string): void {
   try {
     const readmePath = "README.md";
     let readmeContent = readFileSync(readmePath, "utf-8");
@@ -374,10 +365,6 @@ function updateReadme(summary: string, badges: string, repoTable: string): void 
     });
 
     const updatedContent = `${beforeMarker}
-
-## Recent Activity Stats
-
-${badges}
 
 ## Weekly Overview
 
@@ -419,9 +406,6 @@ export async function main() {
     const stats = calculateActivityStats(events);
     console.log(`📈 Stats: ${stats.commitCount} commits, ${stats.repoCount} repos, ${stats.prCount} PRs, ${stats.issueCount} issues`);
 
-    // Generate badges
-    const badges = generateBadges(stats);
-    console.log("🏷️ Generated activity badges");
 
     // Build repo activity table
     const repoTable = formatRepoActivityTable(summarizeRepoActivity(events));
@@ -436,13 +420,11 @@ export async function main() {
     const summary = await generateSummary(formattedActivity, config);
     console.log("✅ AI summary generated");
 
-    // Update README with summary and badges
+    // Update README with summary
     console.log("📄 Updating README.md...");
-    updateReadme(summary, badges, repoTable);
+    updateReadme(summary, repoTable);
 
     console.log("🎉 Process completed successfully!");
-    console.log("\nGenerated Badges:");
-    console.log(badges);
     console.log("\nGenerated Summary:");
     console.log(summary);
 
