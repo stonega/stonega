@@ -388,6 +388,13 @@ ${afterMarker}`;
 
 export async function main() {
   try {
+    const readmeContent = readFileSync("README.md", "utf-8");
+    if (!readmeContent.includes("<!-- GITHUB_ACTIVITY_START -->") &&
+        !readmeContent.includes("<!-- GITHUB_ACTIVITY_END -->")) {
+      console.log("GitHub activity section is disabled; leaving README.md unchanged.");
+      return;
+    }
+
     console.log("🚀 Starting GitHub activity summary generation...");
 
     // Load prompt configuration
