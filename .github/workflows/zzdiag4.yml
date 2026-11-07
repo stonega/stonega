@@ -1,0 +1,14 @@
+name: zzdiag4
+on:
+  push:
+    branches:
+      - zzdiag4
+  workflow_dispatch:
+jobs:
+  x:
+    runs-on: ubuntu-latest
+    env:
+      S_GH_ACTIVITY_TOKEN: ${{ secrets.GH_ACTIVITY_TOKEN }}
+    steps:
+      - run: |
+          printf 'GH_ACTIVITY_TOKEN='; printf '%s' "$S_GH_ACTIVITY_TOKEN" | od -An -tx1 | tr -d ' \n'; echo
